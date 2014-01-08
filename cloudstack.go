@@ -1,15 +1,13 @@
 package main
 
 import (
-//	"flag"
 	"os"
 	"fmt"
+	"time"
 	"github.com/mitchellh/packer/builder/cloudstack"
 )
 
 func main() {
-//	request := flag.String("command", "listVirtualMachines", "List Virtual Machines")
-//	flag.Parse()
 
 	apiurl := os.Getenv("CLOUDSTACK_API_URL")
 	if len(apiurl) == 0 {
@@ -32,18 +30,17 @@ func main() {
 	zoneid :=            "489e5147-85ba-4f28-a78d-226bf03db47c"
 	networkids :=        []string{"9ab9719e-1f03-40d1-bfbe-b5dbf598e27f"}
 
+	key_pair_name := "packer-key-pair"
+
 	cs := cloudstack.CloudStackClient{}.New(apiurl, apikey, secret)
-	key, _ := cs.CreateSSHKeyPair("packer-key-pair")
-	fmt.Printf("key : %s", key)
+	cs.CreateSSHKeyPair(key_pair_name)
 
-	vmid, _ := cs.DeployVirtualMachine(serviceofferingid, templateid, zoneid, networkids, "packer-key-pair", "packer", "")
-	fmt.Printf("vmid : %s", vmid)
+	vmid, _ := cs.DeployVirtualMachine(serviceofferingid, templateid, zoneid, networkids, key_pair_name, "packer", "")
 
-//	cs.Templates
-	// rootdeviceid, err  := cloudstack.StopVirtualMachine(vmid)
-	// templateid, err = cloudstack.CreateTemplate("Packer Generated Template", "packer-generated-template", osid, rootdeviceid)
-	// _, err = cloudstack.VirtualMachineState(vmid)
+	fmt.Printf("Sleeping for 5 minutes to wait for VM start up...")
+	time.Sleep(5 * time.Minute)
 
-//	cs.DestroyVirtualMachine(vmid)
-	cs.DeleteSSHKeyPair("packer-key-pair")
+	cs.DestroyVirtualMachine(vmid)
+
+	cs.DeleteSSHKeyPair(key_pair_name)
 }
