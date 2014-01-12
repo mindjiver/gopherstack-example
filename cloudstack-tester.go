@@ -1,10 +1,10 @@
 package main
 
 import (
-	"os"
 	"fmt"
+	"github.com/mindjiver/gopherstack"
+	"os"
 	"time"
-	"github.com/mitchellh/packer/builder/cloudstack"
 )
 
 func main() {
@@ -26,21 +26,36 @@ func main() {
 	}
 
 	serviceofferingid := "a7f96693-f86e-4e35-92e7-44870f4146dc"
-	templateid :=        "9a0ddd35-5e4a-4675-b668-9c7b89124636"
-	zoneid :=            "489e5147-85ba-4f28-a78d-226bf03db47c"
-	networkids :=        []string{"9ab9719e-1f03-40d1-bfbe-b5dbf598e27f"}
+	templateid := "9a0ddd35-5e4a-4675-b668-9c7b89124636"
+	zoneid := "489e5147-85ba-4f28-a78d-226bf03db47c"
+	networkids := []string{"9ab9719e-1f03-40d1-bfbe-b5dbf598e27f"}
+	//	project_name := "packer"
 
 	key_pair_name := "packer-key-pair"
+	displayname := "packer-testing"
 
-	cs := cloudstack.CloudStackClient{}.New(apiurl, apikey, secret)
+	cs := gopherstack.CloudStackClient{}.New(apiurl, apikey, secret)
 	cs.CreateSSHKeyPair(key_pair_name)
 
-	vmid, _ := cs.DeployVirtualMachine(serviceofferingid, templateid, zoneid, networkids, key_pair_name, "packer", "")
+	cs.ListProjects("")
 
-	fmt.Printf("Sleeping for 5 minutes to wait for VM start up...")
-	time.Sleep(5 * time.Minute)
+	vmid, jobid, _ := cs.DeployVirtualMachine(serviceofferingid, templateid, zoneid, networkids, key_pair_name, displayname, "", "")
+	cs.WaitForAsyncJob(jobid, 2*time.Minute)
 
-	cs.DestroyVirtualMachine(vmid)
+	ip, state, _ := cs.VirtualMachineState(vmid)
+	fmt.Printf("%s has IP : %s and state : %s", vmid, ip, state)
+
+	jobid, _ = cs.StopVirtualMachine(vmid)
+	cs.WaitForAsyncJob(jobid, 5*time.Minute)
+
+	_, state, _ = cs.VirtualMachineState(vmid)
+	fmt.Printf("%s has IP : %s and state : %s", vmid, ip, state)
+
+	jobid, _ = cs.DestroyVirtualMachine(vmid)
+	cs.WaitForAsyncJob(jobid, 5*time.Minute)
+
+	_, state, _ = cs.VirtualMachineState(vmid)
+	fmt.Printf("%s has IP : %s and state : %s", vmid, ip, state)
 
 	cs.DeleteSSHKeyPair(key_pair_name)
 }
