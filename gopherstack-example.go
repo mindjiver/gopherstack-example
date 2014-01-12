@@ -29,7 +29,6 @@ func main() {
 	templateid := "9a0ddd35-5e4a-4675-b668-9c7b89124636"
 	zoneid := "489e5147-85ba-4f28-a78d-226bf03db47c"
 	networkids := []string{"9ab9719e-1f03-40d1-bfbe-b5dbf598e27f"}
-	//	project_name := "packer"
 
 	key_pair_name := "packer-key-pair"
 	displayname := "packer-testing"
@@ -42,20 +41,23 @@ func main() {
 	vmid, jobid, _ := cs.DeployVirtualMachine(serviceofferingid, templateid, zoneid, networkids, key_pair_name, displayname, "", "")
 	cs.WaitForAsyncJob(jobid, 2*time.Minute)
 
-	ip, state, _ := cs.VirtualMachineState(vmid)
+	ip, state, _ := cs.ListVirtualMachines(vmid)
 	fmt.Printf("%s has IP : %s and state : %s", vmid, ip, state)
 
-	jobid, _ = cs.StopVirtualMachine(vmid)
-	cs.WaitForAsyncJob(jobid, 5*time.Minute)
+	//jobid, _ = cs.StopVirtualMachine(vmid)
+	// cs.WaitForAsyncJob(jobid, 5*time.Minute)
 
-	_, state, _ = cs.VirtualMachineState(vmid)
+	_, state, _ = cs.ListVirtualMachines(vmid)
 	fmt.Printf("%s has IP : %s and state : %s", vmid, ip, state)
 
-	jobid, _ = cs.DestroyVirtualMachine(vmid)
-	cs.WaitForAsyncJob(jobid, 5*time.Minute)
+	volumeId, _ := cs.ListVolumes(vmid)
+	fmt.Printf("VM has volume id : %s", volumeId)
 
-	_, state, _ = cs.VirtualMachineState(vmid)
-	fmt.Printf("%s has IP : %s and state : %s", vmid, ip, state)
+	// jobid, _ = cs.DestroyVirtualMachine(vmid)
+	// cs.WaitForAsyncJob(jobid, 5*time.Minute)
+
+	// _, state, _ = cs.VirtualMachineState(vmid)
+	// fmt.Printf("%s has IP : %s and state : %s", vmid, ip, state)
 
 	cs.DeleteSSHKeyPair(key_pair_name)
 }
