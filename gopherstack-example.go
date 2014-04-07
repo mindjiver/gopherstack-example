@@ -26,7 +26,7 @@ func main() {
 
 	// Always validate any SSL certificates in the chain
 	insecureskipverify := false
-	cs := gopherstack.CloudStackClient{}.New(apiurl, apikey, secret, insecureskipverify)
+	cs := gopherstack.CloudstackClient{}.New(apiurl, apikey, secret, insecureskipverify)
 
 	vmid := "19d2acfb-e281-4a13-8d62-e04ab501271d"
 	response, err := cs.ListVirtualMachines(vmid)
